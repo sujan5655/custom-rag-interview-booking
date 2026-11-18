@@ -130,7 +130,7 @@ Make sure you have installed:
 ### 1. Clone the repository
 
 ```bash
-git clone <YOUR_GITHUB_REPOSITORY_URL>
+git clone https://github.com/sujan5655/custom-rag-interview-booking
 cd Rag_Project
 ```
 
@@ -265,4 +265,4 @@ This project follows the assignment constraints:
 
 **Sujan Chaudhary**
 
-GitHub: <YOUR_GITHUB_PROFILE_URL>
+GitHub: https://github.com/sujan5655/
