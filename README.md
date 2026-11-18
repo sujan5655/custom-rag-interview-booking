@@ -5,7 +5,7 @@ A modular backend application built with **FastAPI, Qdrant, PostgreSQL, Redis, S
 This project implements two major functionalities:
 
 1. **Document Ingestion API:** Upload PDF and TXT documents, extract their content, split text using configurable chunking strategies, generate embeddings, and store vectors in Qdrant with document metadata in PostgreSQL.
-2. **Conversational RAG API:** Answer questions using retrieved document context, maintain multi-turn conversation memory using Redis, and support LLM-powered interview booking.
+2. **Conversational RAG API:** Answer questions using retrieved document context, maintain multi-turn conversation memory using Redis, and and support AI-powered interview booking through natural language.
 
 ## Features
 
@@ -29,6 +29,7 @@ This project implements two major functionalities:
 - Generate contextual responses using Groq LLM.
 - Maintain multi-turn conversation history using Redis.
 - Support session-based conversation memory.
+- Rewrite follow-up questions using conversation history to improve retrieval.
 - Combine retrieved context and conversation history when generating answers.
 
 ### 3. Interview Booking
@@ -52,6 +53,7 @@ Booking capabilities:
 - Confirm or reject booking requests.
 - Store confirmed bookings in PostgreSQL.
 - Detect duplicate confirmed bookings for the same email, date, and time.
+- Enforce database-level uniqueness for email, interview date, and interview time.
 
 ## Technology Stack
 
@@ -147,9 +149,9 @@ Create a `.env` file in the project root.
 ```env
 DEBUG=True
 
-DATABASE_URL=postgresql+asyncpg://rag_user:rag_password@localhost:5433/rag_db
+DATABASE_URL=postgresql+asyncpg://<database_user>:<database_password>@localhost:5433/rag_db
 
-REDIS_URL=redis://localhost:6379/0
+REDIS_URL=redis://localhost:6380/0
 
 QDRANT_URL=http://localhost:6333
 QDRANT_COLLECTION=documents
@@ -221,7 +223,14 @@ Run an individual test:
 uv run pytest tests/test_chunking.py -v
 ```
 
-The project includes tests for document chunking and additional booking and conversation workflows can be tested through the API.
+Additional API workflows can be verified through Swagger UI, including:
+
+PDF and TXT ingestion.
+Different chunking strategies.
+Multi-turn document queries.
+Interview information extraction.
+Booking confirmation and cancellation.
+Duplicate booking prevention.
 
 ## Infrastructure Services
 
@@ -230,8 +239,10 @@ The project includes tests for document chunking and additional booking and conv
 | FastAPI          | http://127.0.0.1:8000           |
 | Swagger UI       | http://127.0.0.1:8000/docs      |
 | Qdrant Dashboard | http://127.0.0.1:6333/dashboard |
-| PostgreSQL       | localhost:5433                  |
-| Redis            | localhost:6379                  |
+
+| PostgreSQL  
+localhost:5433 |
+| Redis | localhost:6379 |
 
 ## Design Principles
 
@@ -243,6 +254,7 @@ The project includes tests for document chunking and additional booking and conv
 - Custom RAG implementation without RetrievalQAChain.
 - Redis-backed conversation and temporary booking memory.
 - Persistent storage of document metadata and confirmed bookings.
+- Database-level duplicate booking protection.
 
 ## Project Constraints
 
@@ -253,6 +265,7 @@ This project follows the assignment constraints:
 - No RetrievalQAChain.
 - No frontend or UI.
 - Qdrant is used as the vector database.
+- RAG retrieval and response generation are implemented using a custom pipeline.
 
 ## Security Notes
 
@@ -260,6 +273,7 @@ This project follows the assignment constraints:
 - Do not commit `.env` files or API keys.
 - Use `.env.example` for documenting required configuration.
 - Configure secure cookies and HTTPS for production deployments.
+- Apply appropriate database access controls.
 
 ## Author
 

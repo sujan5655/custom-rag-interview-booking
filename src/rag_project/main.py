@@ -8,20 +8,18 @@ from rag_project.core.config import settings
 from rag_project.db.database import engine
 from rag_project.integrations.redis import redis_client
 from rag_project.integrations.qdrant import qdrant_client
-from rag_project.api.v1.documents import router as documents_router
-from rag_project.api.v1.chat import router as chat_router
-from rag_project.api.v1.bookings import router as bookings_router
+from rag_project.api.routes.documents import router as documents_router
+from rag_project.api.routes.chat import router as chat_router
+from rag_project.api.routes.bookings import router as bookings_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Verify PostgreSQL
+    
     async with engine.connect() as connection:
         await connection.execute(text("SELECT 1"))
 
-    # Verify Redis
     await redis_client.ping()
 
-    # Verify Qdrant
     await qdrant_client.get_collections()
 
     print("All services connected successfully!")
@@ -46,26 +44,51 @@ app = FastAPI(
 app.include_router(
     documents_router,
     prefix="/api/v1",
+    tags=["Documents"],
 )
 
 app.include_router(
     chat_router,
     prefix="/api/v1",
+    tags=["Chat"],
 )
 
 app.include_router(
     bookings_router,
     prefix="/api/v1",
+    tags=["Bookings"],
 )
 
 @app.get("/health")
 async def health_check():
+
+    services = {}
+
+    try:
+        async with engine.connect() as connection:
+            await connection.execute(text("SELECT 1"))
+        services["postgresql"] = "healthy"
+    except Exception:
+        services["postgresql"] = "unhealthy"
+
+    try:
+        await redis_client.ping()
+        services["redis"] = "healthy"
+    except Exception:
+        services["redis"] = "unhealthy"
+
+    try:
+        await qdrant_client.get_collections()
+        services["qdrant"] = "healthy"
+    except Exception:
+        services["qdrant"] = "unhealthy"
+
+    is_healthy = all(
+        status == "healthy"
+        for status in services.values()
+    )
+
     return {
-        "status": "healthy",
-        "services": [
-            "FastAPI",
-            "PostgreSQL",
-            "Redis",
-            "Qdrant",
-        ],
+        "status": "healthy" if is_healthy else "unhealthy",
+        "services": services,
     }

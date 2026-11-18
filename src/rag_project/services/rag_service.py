@@ -1,6 +1,6 @@
 
 from typing import Any
-
+from rag_project.services.query_rewriter import rewrite_search_query
 from rag_project.services.memory_service import ConversationMemory
 from rag_project.services.retrieval_service import retrieve_relevant_chunks
 from rag_project.services.llm_service import generate_response
@@ -35,10 +35,32 @@ async def chat_with_documents(
     history = await memory.get_history()
 
     # 2. Retrieve relevant document chunks
-    chunks = await retrieve_relevant_chunks(
-        query=question,
-        top_k=top_k,
+    # 2. Rewrite the question using conversation history
+    search_query = await rewrite_search_query(
+    question=question,
+    history=history,
+)
+    if search_query is None:
+     answer = (
+        "Could you please clarify what topic you want "
+        "a practical example of?"
     )
+
+     await memory.add_message("user", question)
+     await memory.add_message("assistant", answer)
+
+     return {
+        "session_id": session_id,
+        "question": question,
+        "answer": answer,
+        "retrieved_chunks": 0,
+    }
+
+# 3. Retrieve relevant document chunks
+    chunks = await retrieve_relevant_chunks(
+    query=search_query,
+    top_k=top_k,
+)
 
     # 3. Build document context
     context_parts = []

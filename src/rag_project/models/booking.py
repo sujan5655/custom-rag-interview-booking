@@ -1,7 +1,7 @@
 
 import uuid
 
-from sqlalchemy import Column, Date, DateTime, String, Time, func
+from sqlalchemy import Column, Date, DateTime, String, Time, func,  UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 
 from rag_project.db.base import Base
@@ -9,6 +9,15 @@ from rag_project.db.base import Base
 
 class InterviewBooking(Base):
     __tablename__ = "interview_bookings"
+    __table_args__ = (
+    UniqueConstraint(
+        "email",
+        "interview_date",
+        "interview_time",
+        name="uq_interview_booking_email_date_time",
+    ),
+)
+
 
     id = Column(
         UUID(as_uuid=True),
